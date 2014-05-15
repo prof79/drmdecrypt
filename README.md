@@ -22,12 +22,16 @@ drmdecrypt [-o outfile.ts] infile.srf
 
 ## Building
 
+```
 make
+```
 
 
 ## Installing
 
+```
 make install
+```
 
 
 ## TODO
