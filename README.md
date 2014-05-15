@@ -9,8 +9,8 @@ versions out there based on code from SamyGO and various people
 but they are all either slow, Windows specific, full of bugs or
 even all together.
 
-This version is fast, POSIX compliant, has a sane codebase and is
-focused on a small number of useful features.
+This version is fast, POSIX compliant (Linux, FreeBSD, Windows
+(MinGW)) and is focused on a small number of useful features.
 
 
 ## Usage
@@ -36,8 +36,9 @@ make install
 
 ## TODO
 
+- test with files >4GB
 - specify outdir instead of outfile
 - flag to specify verbosity level
 - test resyncing
-- build on windows (low priority)
+- test on windows
 
