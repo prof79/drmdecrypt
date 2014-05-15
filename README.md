@@ -15,7 +15,9 @@ focused on a small number of useful features.
 
 ## Usage
 
-drmdecrypt [-o <outfile.ts>] <infile.srf>
+```
+drmdecrypt [-o outfile.ts] infile.srf
+```
 
 
 ## Building
