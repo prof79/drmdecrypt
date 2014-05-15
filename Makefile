@@ -1,6 +1,5 @@
 CC	?= cc
 CFLAGS	+= -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE
-LDFLAGS	+= -lc
 
 INSTALL	= install -c
 STRIP	= strip
@@ -12,6 +11,13 @@ BINDIR	= $(PREFIX)/bin
 
 # for release
 CFLAGS	+= -O2
+
+# we need to link to libc/msvcrt
+ifeq ($(OS),Windows_NT)
+	LDFLAGS	+= -lmsvcrt
+else
+	LDFLAGS	+= -lc
+endif
 
 ##########################
 
