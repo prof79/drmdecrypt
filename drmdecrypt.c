@@ -162,26 +162,98 @@ int genoutfilename(char *outfile, char *inffile)
    return 0;
 }
 
-int decode_frame(unsigned char *data , unsigned char *outdata)
+/*
+ * Decode a MPEG packet
+ *
+ * Transport Stream Header:
+ * ========================
+ *
+ * Name                    | bits | byte msk | Description
+ * ------------------------+------+----------+-----------------------------------------------
+ * sync byte               | 8    | 0xff     | Bit pattern from bit 7 to 0 as 0x47
+ * Transp. Error Indicator | 1    | 0x80     | Set when a demodulator cannot correct errors from FEC data
+ * Payload Unit start ind. | 1    | 0x40     | Boolean flag with a value of true means the start of PES
+ *                         |      |          | data or PSI otherwise zero only.
+ * Transport Priority      | 1    | 0x20     | Boolean flag with a value of true means the current packet
+ *                         |      |          | has a higher priority than other packets with the same PID.
+ * PID                     | 13   | 0x1fff   | Packet identifier
+ * Scrambling control      | 2    | 0xc0     | 00 = not scrambled
+ *                         |      |          | 01 = Reserved for future use (DVB-CSA only)
+ *                         |      |          | 10 = Scrambled with even key (DVB-CSA only)
+ *                         |      |          | 11 = Scrambled with odd key (DVB-CSA only)
+ * Adaptation field exist  | 1    | 0x20     | Boolean flag
+ * Contains payload        | 1    | 0x10     | Boolean flag
+ * Continuity counter      | 4    | 0x0f     | Sequence number of payload packets (0x00 to 0x0F)
+ *                         |      |          | Incremented only when a playload is present
+ *
+ * Adaptation Field:
+ * ========================
+ *
+ * Name                    | bits | byte msk | Description
+ * ------------------------+------+----------+-----------------------------------------------
+ * Adaptation Field Length | 8    | 0xff     | Number of bytes immediately following this byte
+ * Discontinuity indicator | 1    | 0x80     | Set to 1 if current TS packet is in a discontinuity state
+ * Random Access indicator | 1    | 0x40     | Set to 1 if PES packet starts a video/audio sequence
+ * Elementary stream prio  | 1    | 0x20     | 1 = higher priority
+ * PCR flag                | 1    | 0x10     | Set to 1 if adaptation field contains a PCR field
+ * OPCR flag               | 1    | 0x08     | Set to 1 if adaptation field contains a OPCR field
+ * Splicing point flag     | 1    | 0x04     | Set to 1 if adaptation field contains a splice countdown field
+ * Transport private data  | 1    | 0x02     | Set to 1 if adaptation field contains private data bytes
+ * Adapt. field extension  | 1    | 0x01     | Set to 1 if adaptation field contains extension
+ * Below fields optional   |      |          | Depends on flags
+ * PCR                     | 33+6+9 |        | Program clock reference
+ * OPCR                    | 33+6+9 |        | Original Program clock reference
+ * Splice countdown        | 8    | 0xff     | Indicates how many TS packets from this one a splicing point
+ *                         |      |          | occurs (may be negative)
+ * Stuffing bytes          | 0+   |          |
+ *
+ *
+ * See: http://en.wikipedia.org/wiki/MPEG_transport_stream
+ */
+int decode_packet(unsigned char *data, unsigned char *outdata)
 {
    unsigned char iv[0x10];
    unsigned char *inbuf;
    unsigned int i, n;
    unsigned char *outbuf;
+   int offset, rounds;
+   int scrambling, adaptation;
+
+   if(data[0] != 0x47)
+   {
+      trace(TRC_ERROR, "Not a valid MPEG packet!");
+      return 0;
+   }
 
    memcpy(outdata, data, 188);
-   if((data[3]&0xC0) == 0x00)
+
+   scrambling = data[3] & 0xC0;
+   adaptation = data[3] & 0x20;
+
+   if(scrambling == 0x80)
    {
-      trace(TRC_DEBUG, "frame not scrambled");
+      trace(TRC_DEBUG, "packet scrambled with even key");
+   }
+   else if(scrambling == 0xC0)
+   {
+      trace(TRC_DEBUG, "packet scrambled with odd key");
+   }
+   else if(scrambling == 0x00)
+   {
+      trace(TRC_DEBUG, "packet not scrambled");
       return 0;
    }
-   if(!((data[3]&0xC0) == 0xC0 || (data[3]&0xC0) == 0x80))
+   else
    {
-      trace(TRC_ERROR, "frame seems to be invalid!");
+      trace(TRC_ERROR, "scrambling info seems to be invalid!");
       return 0;
    }
 
-   int offset=4;
+   offset=4;
+
+   /* skip adaption field */
+   if(adaptation)
+      offset += (data[4]+1);
 
    /* remove scrambling bits */
    outdata[3] &= 0x3f;
@@ -189,17 +261,17 @@ int decode_frame(unsigned char *data , unsigned char *outdata)
    inbuf  = data + offset;
    outbuf = outdata + offset;
 		
-   int rounds = (188 - offset) / 0x10;
+   rounds = (188 - offset) / 0x10;
    /* AES CBC */
    memset(iv, 0, 16);
-   for (i =  0; i < rounds; i++)
+   for (i = 0; i < rounds; i++)
    {
-      unsigned char *out = outbuf + i* 0x10;
+      unsigned char *out = outbuf + i * 0x10;
 
       for(n = 0; n < 16; n++)
          out[n] ^= iv[n];
 
-      aes_decrypt_128(inbuf + i* 0x10, outbuf + i * 0x10, drmkey);
+      aes_decrypt_128(inbuf + i * 0x10, outbuf + i * 0x10, drmkey);
       memcpy(iv, inbuf + i * 0x10, 16);
    }
 
@@ -208,7 +280,7 @@ int decode_frame(unsigned char *data , unsigned char *outdata)
    {
       /* yes, and it should start with the mpeg pes header 0x00 0x00 0x01 ... */
       if (!hasPESHeader(outdata))
-         trace(TRC_DEBUG, "expected packet payload 00 00 01 not found. drm key wrong?");
+         trace(TRC_INFO, "expected packet payload 00 00 01 not found. drm key wrong?");
    }
 
    return 1;		
@@ -309,7 +381,7 @@ resync:
    {
       fread(buf, sizeof(unsigned char), sizeof(buf), srffp);
 
-      /* search 188byte frames starting with 0x47 */
+      /* search 188byte packets starting with 0x47 */
       for(i=0; i < (sizeof(buf)-188-188); i++)
       {
          if (buf[i] == 0x47 && buf[i+188] == 0x47 && buf[i+188+188] == 0x47)
@@ -333,7 +405,7 @@ resync:
 
          if (buf[0] == 0x47)
          {
-            decode_frame(buf, outdata);
+            decode_packet(buf, outdata);
             fwrite(outdata, sizeof(unsigned char), 188, outfp);
          }
          else
