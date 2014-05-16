@@ -35,58 +35,6 @@ char *filename(char *path, char *newsuffix)
    return path;
 }
 
-int hasPESHeader(unsigned char *pBuf)
-{
-   unsigned char  *p;
-   unsigned char  u8AFC;
-
-   /*
-    2  AFC   Adaption Field Control
-     1. 01 - no adaptation field, payload only
-     2. 10 - adaptation field only, no payload
-     3. 11 - adaptation field followed by payload
-     4. 00 - RESERVED for future use
-   */
-   u8AFC = pBuf[3] >> 4 & 0x03;
-   p = &pBuf[4];
-
-   switch (u8AFC) 
-   {
-      case 0x11:
-         /* 188-4-1-3 */
-         if (*p < 181) {
-            /* skipping adapt field. points now to 1st payload byte */
-            p += *p + 1;
-         }
-         else {
-            trace(TRC_ERROR, "Adaptation Field is too long!. No space left for PES header.");
-            return 0;
-         }
-         /* fall thru */
-
-      case 0x01:
-         trace(TRC_DEBUG, "FRAME HEADER: %02x %02x %02x", *p, *(p+1), *(p+2));
-         if (memcmp(p, "\x00\x00\x01", 3)) {
-            trace(TRC_WARN, "no PES header found");
-            return 0;
-         }
-         else {
-            /* PES header found in packet */
-            return 1;
-         }
-
-      case 0x10:
-         /* this should never happen as we have pusi packets here only */
-         trace(TRC_ERROR, "Packet has adapt field but no payload!");
-         return 0;
-
-      default:
-         /* 00 is reserved and 01 should never happen as we have pusi packets here only */
-         trace(TRC_ERROR, "Illegal adaptation field value");
-         return 0;
-    }
-}
-
 int readdrmkey(char *mdbfile)
 {
    char tmpbuf[64];
@@ -273,14 +221,6 @@ int decode_packet(unsigned char *data, unsigned char *outdata)
 
       aes_decrypt_128(inbuf + i * 0x10, outbuf + i * 0x10, drmkey);
       memcpy(iv, inbuf + i * 0x10, 16);
-   }
-
-   /* is this a pusi packet? */
-   if ((outdata[1] & 0x40) == 0x40)
-   {
-      /* yes, and it should start with the mpeg pes header 0x00 0x00 0x01 ... */
-      if (!hasPESHeader(outdata))
-         trace(TRC_INFO, "expected packet payload 00 00 01 not found. drm key wrong?");
    }
 
    return 1;		
