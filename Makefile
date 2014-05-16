@@ -1,3 +1,7 @@
+#
+# This Makefile requires GNU Make
+#
+
 CC	?= cc
 CFLAGS	+= -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE
 
@@ -14,9 +18,9 @@ CFLAGS	+= -O2
 
 # we need to link to libc/msvcrt
 ifeq ($(OS),Windows_NT)
-	LDFLAGS	+= -lmsvcrt
+LDFLAGS	+= -lmsvcrt
 else
-	LDFLAGS	+= -lc
+LDFLAGS	+= -lc
 endif
 
 ##########################
