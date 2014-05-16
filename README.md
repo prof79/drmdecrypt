@@ -41,4 +41,5 @@ make install
 - flag to specify verbosity level
 - test resyncing
 - test on windows
+- MPEG packet size could also be 204 or 208 byte
 
