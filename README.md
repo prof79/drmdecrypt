@@ -36,6 +36,7 @@ make install
 
 ## TODO
 
+- detect AESNI support at runtime
 - test AESNI support
 - specify outdir instead of outfile
 - flag to specify verbosity level
