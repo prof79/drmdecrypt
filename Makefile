@@ -18,8 +18,10 @@ CFLAGS	+= -O2
 
 # we need to link to libc/msvcrt
 ifeq ($(OS),Windows_NT)
+CFLAGS += -DHAVE__ALIGNED_MALLOC
 LDFLAGS	+= -lmsvcrt
 else
+CFLAGS += -DHAVE_POSIX_MEMALIGN
 LDFLAGS	+= -lc
 endif
 

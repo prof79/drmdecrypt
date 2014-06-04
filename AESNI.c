@@ -22,8 +22,6 @@
  * ===================================================================
  */
 
-#define HAVE_POSIX_MEMALIGN
-
 #include <wmmintrin.h>
 #include <stdlib.h>
 #include <string.h>
