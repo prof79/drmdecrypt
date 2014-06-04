@@ -111,7 +111,7 @@ int genoutfilename(char *outfile, char *inffile)
    return 0;
 }
 
-int decrypt_aes128cbc(char *key, unsigned char *pin, int len, unsigned char *pout)
+int decrypt_aes128cbc(unsigned char *key, unsigned char *pin, int len, unsigned char *pout)
 {
    unsigned char IV[BLOCK_SIZE];
    block_state state;
