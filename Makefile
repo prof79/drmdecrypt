@@ -3,7 +3,7 @@
 #
 
 CC	?= cc
-CFLAGS	+= -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE
+CFLAGS	+= -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -maes
 
 INSTALL	= install -c
 STRIP	= strip
@@ -25,8 +25,8 @@ endif
 
 ##########################
 
-SRC	= aes.c drmdecrypt.c
-OBJS	= aes.o drmdecrypt.o
+SRC	= AES.c AESNI.c drmdecrypt.c
+OBJS	= AES.o AESNI.o drmdecrypt.o
 
 all:	drmdecrypt
 

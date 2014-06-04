@@ -1,54 +1,35 @@
-#include <stdio.h>
-#include <string.h>
-/**
- * rijndael-alg-fst.h
- *
- * @version 3.0 (December 2000)
- *
- * Optimised ANSI C code for the Rijndael cipher (now AES)
- *
- * @author Vincent Rijmen <vincent.rijmen@esat.kuleuven.ac.be>
- * @author Antoon Bosselaers <antoon.bosselaers@esat.kuleuven.ac.be>
- * @author Paulo Barreto <paulo.barreto@terra.com.br>
- *
- * This code is hereby placed in the public domain.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHORS ''AS IS'' AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
- * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
- * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-#ifndef __RIJNDAEL_ALG_FST_H
-#define __RIJNDAEL_ALG_FST_H
+
+#ifndef __AES_H
+#define __AES_H
 
 #define MAXKC	(256/32)
 #define MAXKB	(256/8)
 #define MAXNR	14
 
+#define BLOCK_SIZE	16
+
 typedef unsigned char	u8;	
 typedef unsigned short	u16;	
 typedef unsigned int	u32;
 
-int rijndaelKeySetupEnc(u32 rk[/*4*(Nr + 1)*/], const u8 cipherKey[], int keyBits);
-int rijndaelKeySetupDec(u32 rk[/*4*(Nr + 1)*/], const u8 cipherKey[], int keyBits);
-void rijndaelEncrypt(const u32 rk[/*4*(Nr + 1)*/], int Nr, const u8 pt[16], u8 ct[16]);
-void rijndaelDecrypt(const u32 rk[/*4*(Nr + 1)*/], int Nr, const u8 ct[16], u8 pt[16]);
+typedef struct {
+   u32 ek[ 4*(MAXNR+1) ];
+   u32 dk[ 4*(MAXNR+1) ];
+   int rounds;
+} block_state;
 
-#ifdef INTERMEDIATE_VALUE_KAT
-void rijndaelEncryptRound(const u32 rk[/*4*(Nr + 1)*/], int Nr, u8 block[16], int rounds);
-void rijndaelDecryptRound(const u32 rk[/*4*(Nr + 1)*/], int Nr, u8 block[16], int rounds);
-#endif /* INTERMEDIATE_VALUE_KAT */
 
-void AES_128(unsigned char *key, unsigned char *plainText, unsigned char *cipherText);
-void aes_decrypt_128(unsigned char *plainText, unsigned char *cipherText, unsigned char *key);
-void aes_encrypt_128(unsigned char *plainText, unsigned char *cipherText, unsigned char *key);
+/* AES */
+extern void block_init_aes(block_state *state, unsigned char *key, int keylen);
+extern void block_finalize_aes(block_state* self);
+extern void block_encrypt_aes(block_state *self, u8 *in, u8 *out);
+extern void block_decrypt_aes(block_state *self, u8 *in, u8 *out);
 
-#endif /* __RIJNDAEL_ALG_FST_H */
+/* AES-NI */
+extern void block_init_aesni(block_state *state, unsigned char *key, int keylen);
+extern void block_finalize_aesni(block_state* self);
+extern void block_encrypt_aesni(block_state *self, u8 *in, u8 *out);
+extern void block_decrypt_aesni(block_state *self, u8 *in, u8 *out);
+
+#endif /* __AES_H */
 

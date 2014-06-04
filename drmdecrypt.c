@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <libgen.h>
 #include <limits.h>
 #include <unistd.h>
@@ -110,6 +111,33 @@ int genoutfilename(char *outfile, char *inffile)
    return 0;
 }
 
+int decrypt_aes128cbc(char *key, unsigned char *pin, int len, unsigned char *pout)
+{
+   unsigned char IV[BLOCK_SIZE];
+   block_state state;
+   int i, j;
+
+   memset(IV, 0, BLOCK_SIZE);
+   memset(&state, 0, sizeof(block_state));
+
+   state.rounds = 10;
+   block_init_aes(&state, key, BLOCK_SIZE);
+
+   for(i=0; i < len; i+=BLOCK_SIZE)
+   {
+      for(j=0; j < BLOCK_SIZE; j++)
+      {
+         pout[i+j] ^= IV[j];
+         IV[j] = pin[i+j];
+      }
+
+      block_decrypt_aes(&state, pin + i, pout + i);
+   }
+
+   return 0;
+}
+
+
 /*
  * Decode a MPEG packet
  *
@@ -161,9 +189,7 @@ int genoutfilename(char *outfile, char *inffile)
 int decode_packet(unsigned char *data, unsigned char *outdata)
 {
    unsigned char iv[0x10];
-   unsigned char *inbuf;
    unsigned int i, n;
-   unsigned char *outbuf;
    int offset, rounds;
    int scrambling, adaptation;
 
@@ -206,22 +232,7 @@ int decode_packet(unsigned char *data, unsigned char *outdata)
    /* remove scrambling bits */
    outdata[3] &= 0x3f;
 
-   inbuf  = data + offset;
-   outbuf = outdata + offset;
-		
-   rounds = (188 - offset) / 0x10;
-   /* AES CBC */
-   memset(iv, 0, 16);
-   for (i = 0; i < rounds; i++)
-   {
-      unsigned char *out = outbuf + i * 0x10;
-
-      for(n = 0; n < 16; n++)
-         out[n] ^= iv[n];
-
-      aes_decrypt_128(inbuf + i * 0x10, outbuf + i * 0x10, drmkey);
-      memcpy(iv, inbuf + i * 0x10, 16);
-   }
+   decrypt_aes128cbc(drmkey, data + offset, 188 - offset, outdata + offset);
 
    return 1;		
 }
