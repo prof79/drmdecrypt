@@ -36,7 +36,7 @@ make install
 
 ## TODO
 
-- test with files >4GB
+- test AESNI support
 - specify outdir instead of outfile
 - flag to specify verbosity level
 - test resyncing
