@@ -1,3 +1,11 @@
+/* drmdecrypt -- DRM decrypting tool for Samsung TVs
+ *
+ * Copyright (C) 2014 - Bernhard Froehlich <decke@bluelife.at>
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the GPL v2 license.  See the LICENSE file for details.
+ */
 
 #ifndef __AES_H
 #define __AES_H
