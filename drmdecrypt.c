@@ -105,7 +105,7 @@ int genoutfilename(char *outfile, char *inffile)
 
       strcat(tmpname, ".ts");
 
-      strcpy(outfile, tmpname);
+      strcat(outfile, tmpname);
    }
    else
       return 1;
@@ -272,7 +272,7 @@ int decode_packet(unsigned char *data, unsigned char *outdata)
 
 void usage(void)
 {
-   fprintf(stderr, "Usage: drmdecrypt [-x] [-o outfile] infile.srf\n");
+   fprintf(stderr, "Usage: drmdecrypt [-x] [-o outdir] infile.srf ...\n");
 }
 
 int main(int argc, char *argv[])
@@ -281,6 +281,7 @@ int main(int argc, char *argv[])
    char inffile[PATH_MAX];
    char srffile[PATH_MAX];
    char outfile[PATH_MAX];
+   char outdir[PATH_MAX] = "./";
    FILE *srffp, *outfp;
    int ch, retries;
 
@@ -291,13 +292,14 @@ int main(int argc, char *argv[])
    unsigned char outdata[1024];
 
    memset(outfile, '\0', sizeof(outfile));
+   memset(outdir, '\0', sizeof(outdir));
 
    while ((ch = getopt(argc, argv, "o:x")) != -1)
    {
       switch (ch)
       {
          case 'o':
-            strcpy(outfile, optarg);
+            strcpy(outdir, optarg);
             break;
          case 'x':
             enable_aesni = 0;
@@ -328,14 +330,17 @@ int main(int argc, char *argv[])
    if(readdrmkey(mdbfile) != 0)
       return 1;
 
-   if(strlen(outfile) == 0)
+   /* verify outdir */
+   if(outdir[strlen(outdir)-1] != '/')
+      strcat(outdir, "/");
+
+   strcpy(outfile, outdir);
+
+   /* generate outfile name based on title from .inf file */
+   if(genoutfilename(outfile, inffile) != 0)
    {
-      /* generate outfile name based on title from .inf file */
-      if(genoutfilename(outfile, inffile) != 0)
-      {
-         strcpy(outfile, srffile);
-         filename(outfile, "ts");
-      }
+      strcat(outfile, srffile);
+      filename(outfile, "ts");
    }
 
    trace(TRC_INFO, "Writing to %s", outfile);

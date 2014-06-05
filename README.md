@@ -16,7 +16,7 @@ This version is fast, POSIX compliant (Linux, FreeBSD, Windows
 ## Usage
 
 ```
-drmdecrypt [-o outfile.ts] infile.srf
+drmdecrypt [-x] [-o outdir] infile.srf
 ```
 
 
@@ -36,11 +36,8 @@ make install
 
 ## TODO
 
-- detect AESNI support at runtime
-- test AESNI support
-- specify outdir instead of outfile
+- test AESNI support (fix __cpuid for clang)
 - flag to specify verbosity level
 - test resyncing
-- test on windows
 - MPEG packet size could also be 204 or 208 byte
 
