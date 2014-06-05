@@ -293,7 +293,6 @@ int main(int argc, char *argv[])
 
    memset(inffile, '\0', sizeof(inffile));
    memset(outfile, '\0', sizeof(outfile));
-   memset(outdir, '\0', sizeof(outdir));
 
    while ((ch = getopt(argc, argv, "o:x")) != -1)
    {
