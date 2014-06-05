@@ -82,7 +82,7 @@ int genoutfilename(char *outfile, char *inffile)
       fclose(inffp);
 
       /* build base path */
-      strcpy(tmpname, inffile);
+      strcpy(tmpname, basename(inffile));
       filename(tmpname, NULL);
       strcat(tmpname, "-");
       
@@ -281,7 +281,7 @@ int main(int argc, char *argv[])
    char inffile[PATH_MAX];
    char srffile[PATH_MAX];
    char outfile[PATH_MAX];
-   char outdir[PATH_MAX] = "./";
+   char outdir[PATH_MAX] = ".";
    FILE *srffp, *outfp;
    int ch, retries;
 
@@ -291,6 +291,7 @@ int main(int argc, char *argv[])
    unsigned char buf[1024];
    unsigned char outdata[1024];
 
+   memset(inffile, '\0', sizeof(inffile));
    memset(outfile, '\0', sizeof(outfile));
    memset(outdir, '\0', sizeof(outdir));
 
