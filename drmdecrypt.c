@@ -13,12 +13,14 @@
 #include <libgen.h>
 #include <limits.h>
 #include <unistd.h>
+#include <cpuid.h>
 
 #include "aes.h"
 #include "trace.h"
 
 
 unsigned char drmkey[0x10];
+unsigned short enable_aesni = 1;
 
 
 char *filename(char *path, char *newsuffix)
@@ -111,6 +113,31 @@ int genoutfilename(char *outfile, char *inffile)
    return 0;
 }
 
+/*
+ * Check for AES-NI CPU support
+ */
+int Check_CPU_support_AES()
+{
+#if defined(__INTEL_COMPILER)
+   int CPUInfo[4] = {-1};
+
+   if(!enable_aesni)
+      return 0;
+
+   __cpuid(CPUInfo, 1);
+   return (CPUInfo[2] & 0x2000000);
+#else
+   unsigned int a=1,b,c,d;
+
+   if(!enable_aesni)
+      return 0;
+
+   __cpuid(1, a,b,c,d);
+   return (c & 0x2000000);
+#endif
+}
+
+
 int decrypt_aes128cbc(unsigned char *key, unsigned char *pin, int len, unsigned char *pout)
 {
    unsigned char IV[BLOCK_SIZE];
@@ -121,7 +148,10 @@ int decrypt_aes128cbc(unsigned char *key, unsigned char *pin, int len, unsigned 
    memset(&state, 0, sizeof(block_state));
 
    state.rounds = 10;
-   block_init_aes(&state, key, BLOCK_SIZE);
+   if(Check_CPU_support_AES())
+      block_init_aesni(&state, key, BLOCK_SIZE);
+   else
+      block_init_aes(&state, key, BLOCK_SIZE);
 
    for(i=0; i < len; i+=BLOCK_SIZE)
    {
@@ -131,7 +161,10 @@ int decrypt_aes128cbc(unsigned char *key, unsigned char *pin, int len, unsigned 
          IV[j] = pin[i+j];
       }
 
-      block_decrypt_aes(&state, pin + i, pout + i);
+      if(Check_CPU_support_AES())
+         block_decrypt_aesni(&state, pin + i, pout + i);
+      else
+         block_decrypt_aes(&state, pin + i, pout + i);
    }
 
    return 0;
@@ -239,7 +272,7 @@ int decode_packet(unsigned char *data, unsigned char *outdata)
 
 void usage(void)
 {
-   fprintf(stderr, "Usage: drmdecrypt [-o outfile] infile.srf\n");
+   fprintf(stderr, "Usage: drmdecrypt [-x] [-o outfile] infile.srf\n");
 }
 
 int main(int argc, char *argv[])
@@ -259,12 +292,15 @@ int main(int argc, char *argv[])
 
    memset(outfile, '\0', sizeof(outfile));
 
-   while ((ch = getopt(argc, argv, "o:")) != -1)
+   while ((ch = getopt(argc, argv, "o:x")) != -1)
    {
       switch (ch)
       {
          case 'o':
             strcpy(outfile, optarg);
+            break;
+         case 'x':
+            enable_aesni = 0;
             break;
          default:
             usage();
@@ -277,6 +313,8 @@ int main(int argc, char *argv[])
       usage();
       exit(EXIT_FAILURE);
    }
+
+   trace(TRC_INFO, "AES-NI CPU support %s", Check_CPU_support_AES() ? "enabled" : "disabled");
 
    strcpy(srffile, argv[optind]);
 
