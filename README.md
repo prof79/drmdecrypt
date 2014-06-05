@@ -36,7 +36,7 @@ make install
 
 ## TODO
 
-- test AESNI support (fix __cpuid for clang)
+- test AESNI support
 - flag to specify verbosity level
 - test resyncing
 - MPEG packet size could also be 204 or 208 byte
