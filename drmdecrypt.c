@@ -19,7 +19,7 @@
 #include "trace.h"
 
 
-unsigned char drmkey[0x10];
+block_state state;
 unsigned short enable_aesni = 1;
 
 
@@ -40,11 +40,14 @@ char *filename(char *path, char *newsuffix)
 
 int readdrmkey(char *mdbfile)
 {
+   unsigned char drmkey[0x10];
    char tmpbuf[64];
    unsigned int j;
    FILE *mdbfp;
 
    memset(tmpbuf, '\0', sizeof(tmpbuf));
+   memset(&state, 0, sizeof(block_state));
+   state.rounds = 10;
 
    if((mdbfp = fopen(mdbfile, "rb")))
    {
@@ -59,6 +62,11 @@ int readdrmkey(char *mdbfile)
 
       trace(TRC_INFO, "drm key successfully read from %s", basename(mdbfile));
       trace(TRC_INFO, "KEY: %s", tmpbuf);
+
+      if(Check_CPU_support_AES())
+         block_init_aesni(&state, drmkey, BLOCK_SIZE);
+      else
+         block_init_aes(&state, drmkey, BLOCK_SIZE);
 
       return 0;
    }
@@ -138,24 +146,15 @@ int Check_CPU_support_AES()
 }
 
 
-int decrypt_aes128cbc(unsigned char *key, unsigned char *pin, int len, unsigned char *pout)
+int decrypt_aes128cbc(unsigned char *pin, int len, unsigned char *pout)
 {
-   block_state state;
    int i, j;
-
-   memset(&state, 0, sizeof(block_state));
 
    if(len % BLOCK_SIZE != 0)
    {
       trace(TRC_ERROR, "Decrypt length needs to be a multiple of BLOCK_SIZE");
       return 1;
    }
-
-   state.rounds = 10;
-   if(Check_CPU_support_AES())
-      block_init_aesni(&state, key, BLOCK_SIZE);
-   else
-      block_init_aes(&state, key, BLOCK_SIZE);
 
    for(i=0; i < len; i+=BLOCK_SIZE)
    {
@@ -264,7 +263,7 @@ int decode_packet(unsigned char *data, unsigned char *outdata)
    outdata[3] &= 0x3f;
 
    /* decrypt only full blocks (they seem to avoid padding) */
-   decrypt_aes128cbc(drmkey, data + offset, ((188 - offset)/BLOCK_SIZE)*BLOCK_SIZE, outdata + offset);
+   decrypt_aes128cbc(data + offset, ((188 - offset)/BLOCK_SIZE)*BLOCK_SIZE, outdata + offset);
 
    return 1;		
 }
