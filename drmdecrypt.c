@@ -23,6 +23,31 @@ block_state state;
 unsigned short enable_aesni = 1;
 
 
+/*
+ * Check for AES-NI CPU support
+ */
+int Check_CPU_support_AES()
+{
+#if defined(__INTEL_COMPILER)
+   int CPUInfo[4] = {-1};
+
+   if(!enable_aesni)
+      return 0;
+
+   __cpuid(CPUInfo, 1);
+   return (CPUInfo[2] & 0x2000000);
+#else
+   unsigned int a=1,b,c,d;
+
+   if(!enable_aesni)
+      return 0;
+
+   __cpuid(1, a,b,c,d);
+   return (c & 0x2000000);
+#endif
+}
+
+
 char *filename(char *path, char *newsuffix)
 {
    char *end = path + strlen(path);
@@ -119,30 +144,6 @@ int genoutfilename(char *outfile, char *inffile)
       return 1;
 
    return 0;
-}
-
-/*
- * Check for AES-NI CPU support
- */
-int Check_CPU_support_AES()
-{
-#if defined(__INTEL_COMPILER)
-   int CPUInfo[4] = {-1};
-
-   if(!enable_aesni)
-      return 0;
-
-   __cpuid(CPUInfo, 1);
-   return (CPUInfo[2] & 0x2000000);
-#else
-   unsigned int a=1,b,c,d;
-
-   if(!enable_aesni)
-      return 0;
-
-   __cpuid(1, a,b,c,d);
-   return (c & 0x2000000);
-#endif
 }
 
 
