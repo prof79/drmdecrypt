@@ -147,6 +147,12 @@ int decrypt_aes128cbc(unsigned char *key, unsigned char *pin, int len, unsigned 
    memset(IV, 0, BLOCK_SIZE);
    memset(&state, 0, sizeof(block_state));
 
+   if(len % BLOCK_SIZE != 0)
+   {
+      trace(TRC_ERROR, "Decrypt length needs to be a multiple of BLOCK_SIZE");
+      return 1;
+   }
+
    state.rounds = 10;
    if(Check_CPU_support_AES())
       block_init_aesni(&state, key, BLOCK_SIZE);
@@ -265,7 +271,8 @@ int decode_packet(unsigned char *data, unsigned char *outdata)
    /* remove scrambling bits */
    outdata[3] &= 0x3f;
 
-   decrypt_aes128cbc(drmkey, data + offset, 188 - offset, outdata + offset);
+   /* decrypt only full blocks (they seem to avoid padding) */
+   decrypt_aes128cbc(drmkey, data + offset, ((188 - offset)/BLOCK_SIZE)*BLOCK_SIZE, outdata + offset);
 
    return 1;		
 }
