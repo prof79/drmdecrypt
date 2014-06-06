@@ -12,6 +12,7 @@ BINDIR	= $(PREFIX)/bin
 
 # for debugging
 #CFLAGS	+= -g -Wall
+#LDFLAGS	+= -pg
 
 # for release
 CFLAGS	+= -O2
