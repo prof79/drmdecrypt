@@ -140,11 +140,9 @@ int Check_CPU_support_AES()
 
 int decrypt_aes128cbc(unsigned char *key, unsigned char *pin, int len, unsigned char *pout)
 {
-   unsigned char IV[BLOCK_SIZE];
    block_state state;
    int i, j;
 
-   memset(IV, 0, BLOCK_SIZE);
    memset(&state, 0, sizeof(block_state));
 
    if(len % BLOCK_SIZE != 0)
@@ -161,12 +159,6 @@ int decrypt_aes128cbc(unsigned char *key, unsigned char *pin, int len, unsigned 
 
    for(i=0; i < len; i+=BLOCK_SIZE)
    {
-      for(j=0; j < BLOCK_SIZE; j++)
-      {
-         pout[i+j] ^= IV[j];
-         IV[j] = pin[i+j];
-      }
-
       if(Check_CPU_support_AES())
          block_decrypt_aesni(&state, pin + i, pout + i);
       else
