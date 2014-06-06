@@ -149,7 +149,7 @@ int genoutfilename(char *outfile, char *inffile)
 
 int decrypt_aes128cbc(unsigned char *pin, int len, unsigned char *pout)
 {
-   int i, j;
+   int i;
 
    if(len % BLOCK_SIZE != 0)
    {
@@ -219,9 +219,7 @@ int decrypt_aes128cbc(unsigned char *pin, int len, unsigned char *pout)
  */
 int decode_packet(unsigned char *data, unsigned char *outdata)
 {
-   unsigned char iv[0x10];
-   unsigned int i, n;
-   int offset, rounds;
+   int offset;
    int scrambling, adaptation;
 
    if(data[0] != 0x47)
