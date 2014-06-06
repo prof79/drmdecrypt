@@ -20,7 +20,7 @@
 
 
 block_state state;
-unsigned short enable_aesni = 1;
+int enable_aesni = 0;
 
 
 /*
@@ -30,18 +30,10 @@ int Check_CPU_support_AES()
 {
 #if defined(__INTEL_COMPILER)
    int CPUInfo[4] = {-1};
-
-   if(!enable_aesni)
-      return 0;
-
    __cpuid(CPUInfo, 1);
    return (CPUInfo[2] & 0x2000000);
 #else
    unsigned int a=1,b,c,d;
-
-   if(!enable_aesni)
-      return 0;
-
    __cpuid(1, a,b,c,d);
    return (c & 0x2000000);
 #endif
@@ -88,7 +80,7 @@ int readdrmkey(char *mdbfile)
       trace(TRC_INFO, "drm key successfully read from %s", basename(mdbfile));
       trace(TRC_INFO, "KEY: %s", tmpbuf);
 
-      if(Check_CPU_support_AES())
+      if(enable_aesni)
          block_init_aesni(&state, drmkey, BLOCK_SIZE);
       else
          block_init_aes(&state, drmkey, BLOCK_SIZE);
@@ -159,7 +151,7 @@ int decrypt_aes128cbc(unsigned char *pin, int len, unsigned char *pout)
 
    for(i=0; i < len; i+=BLOCK_SIZE)
    {
-      if(Check_CPU_support_AES())
+      if(enable_aesni)
          block_decrypt_aesni(&state, pin + i, pout + i);
       else
          block_decrypt_aes(&state, pin + i, pout + i);
@@ -291,6 +283,8 @@ int main(int argc, char *argv[])
    memset(inffile, '\0', sizeof(inffile));
    memset(outfile, '\0', sizeof(outfile));
 
+   enable_aesni = Check_CPU_support_AES();
+
    while ((ch = getopt(argc, argv, "o:x")) != -1)
    {
       switch (ch)
@@ -313,7 +307,7 @@ int main(int argc, char *argv[])
       exit(EXIT_FAILURE);
    }
 
-   trace(TRC_INFO, "AES-NI CPU support %s", Check_CPU_support_AES() ? "enabled" : "disabled");
+   trace(TRC_INFO, "AES-NI CPU support %s", enable_aesni ? "enabled" : "disabled");
 
    strcpy(srffile, argv[optind]);
 
