@@ -18,6 +18,15 @@
 #include "aes.h"
 #include "trace.h"
 
+/* Helper macros */
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+
+/* Version Information */
+#ifndef REVISION
+#define REVISION  ""
+#endif
+#define VERSION	  "0.9-git" STR(REVISION)
 
 block_state state;
 int enable_aesni = 0;
@@ -396,13 +405,18 @@ int main(int argc, char *argv[])
 
    enable_aesni = Check_CPU_support_AES();
 
-   while ((ch = getopt(argc, argv, "o:x")) != -1)
+   while ((ch = getopt(argc, argv, "o:vx")) != -1)
    {
       switch (ch)
       {
          case 'o':
             strcpy(outdir, optarg);
             break;
+         case 'v':
+            fprintf(stderr, "drmdecrypt %s\n\n", VERSION);
+            fprintf(stderr, "Source: http://github.com/decke/drmdecrypt\n");
+            fprintf(stderr, "License: GNU General Public License\n");
+            exit(EXIT_SUCCESS);
          case 'x':
             enable_aesni = 0;
             break;
