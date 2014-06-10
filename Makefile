@@ -9,6 +9,7 @@ INSTALL	= install -c
 STRIP	= strip
 PREFIX	= /usr/local
 BINDIR	= $(PREFIX)/bin
+VERSION	= 1.0-beta
 
 # add git revision if .git exists
 ifeq (,$(wildcard .git))
@@ -30,13 +31,12 @@ endif
 ifeq ($(OS),Windows_NT)
 CFLAGS += -DHAVE__ALIGNED_MALLOC
 LDFLAGS	+= -lmsvcrt
+RELDIR	= drmdecrypt-$(VERSION)-win
 else
 CFLAGS += -DHAVE_POSIX_MEMALIGN
 LDFLAGS	+= -lc
+RELDIR	= drmdecrypt-$(VERSION)
 endif
-
-# Release defines
-RELDIR	= drmdecrypt-1.0
 
 ##########################
 
