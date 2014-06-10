@@ -429,7 +429,8 @@ int main(int argc, char *argv[])
 
    do
    {
-      decryptsrf(argv[optind], outdir);
+      if(decryptsrf(argv[optind], outdir) != 0)
+         break;
    }
    while(++optind < argc);
 
