@@ -12,6 +12,10 @@ even all together.
 This version is fast, POSIX compliant (Linux, FreeBSD, Windows
 (MinGW)) and is focused on a small number of useful features.
 
+## Features
+- Reading title and channel from .inf file
+- AES-NI support (5x faster)
+
 
 ## Usage
 
@@ -36,8 +40,6 @@ make install
 
 ## TODO
 
-- test AESNI support
 - flag to specify verbosity level
-- test resyncing
 - MPEG packet size could also be 204 or 208 byte
 
