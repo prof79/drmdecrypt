@@ -12,7 +12,7 @@ BINDIR	= $(PREFIX)/bin
 
 ifeq ($(DEBUG),1)
 # for debugging
-CFLAGS	+= -g -Wall
+CFLAGS	+= -g -Wall -Werror
 LDFLAGS	+= -pg
 else
 # for release
