@@ -70,7 +70,10 @@ int readdrmkey(char *mdbfile)
    {
       fseek(mdbfp, 8, SEEK_SET);
       for (j = 0; j < 0x10; j++){
-         fread(&drmkey[(j&0xc)+(3-(j&3))], sizeof(unsigned char), 1, mdbfp);
+         if(fread(&drmkey[(j&0xc)+(3-(j&3))], sizeof(unsigned char), 1, mdbfp) != 1){
+            trace(TRC_ERROR, "short read while reading DRM key");
+            return 1;
+         }
       }
       fclose(mdbfp);
 
@@ -103,7 +106,10 @@ int genoutfilename(char *outfile, char *inffile)
    if((inffp = fopen(inffile, "rb")))
    {
       fseek(inffp, 0, SEEK_SET);
-      fread(inf, sizeof(unsigned char), 0x200, inffp);
+      if(fread(inf, sizeof(unsigned char), 0x200, inffp) != 0x200){
+         trace(TRC_ERROR, "short read while reading inf file");
+         return 1;
+      }
       fclose(inffp);
 
       /* build base path */
@@ -364,7 +370,10 @@ resync:
 
    while(sync_find == 0 && retries-- > 0)
    {
-      fread(buf, sizeof(unsigned char), sizeof(buf), srffp);
+      if(fread(buf, sizeof(unsigned char), sizeof(buf), srffp) != sizeof(buf)){
+         trace(TRC_INFO, "short read while resyncing");
+         break;
+      }
 
       /* search 188byte packets starting with 0x47 */
       for(i=0; i < (sizeof(buf)-188-188); i++)
@@ -386,7 +395,10 @@ resync:
    {
       for(i=0; foffset+i < filesize; i+= 188)
       {
-         fread(buf, sizeof(unsigned char), 188, srffp);
+         if(fread(buf, sizeof(unsigned char), 188, srffp) != 188){
+            trace(TRC_INFO, "short read while reading stream");
+            break;
+         }
 
          if (buf[0] == 0x47)
          {
