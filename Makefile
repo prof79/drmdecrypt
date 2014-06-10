@@ -10,12 +10,14 @@ STRIP	= strip
 PREFIX	= /usr/local
 BINDIR	= $(PREFIX)/bin
 
+ifeq ($(DEBUG),1)
 # for debugging
-#CFLAGS	+= -g -Wall
-#LDFLAGS	+= -pg
-
+CFLAGS	+= -g -Wall
+LDFLAGS	+= -pg
+else
 # for release
 CFLAGS	+= -O2
+endif
 
 # we need to link to libc/msvcrt
 ifeq ($(OS),Windows_NT)
