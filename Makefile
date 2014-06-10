@@ -9,7 +9,7 @@ INSTALL	= install -c
 STRIP	= strip
 PREFIX	= /usr/local
 BINDIR	= $(PREFIX)/bin
-VERSION	= 1.0-beta
+VERSION	= 1.0
 
 # add git revision if .git exists
 ifeq (,$(wildcard .git))
