@@ -276,7 +276,7 @@ int main(int argc, char *argv[])
    char inffile[PATH_MAX];
    char srffile[PATH_MAX];
    char outfile[PATH_MAX];
-   char outdir[PATH_MAX] = ".";
+   char outdir[PATH_MAX];
    FILE *srffp, *outfp;
    int ch, retries;
 
@@ -288,6 +288,7 @@ int main(int argc, char *argv[])
 
    memset(inffile, '\0', sizeof(inffile));
    memset(outfile, '\0', sizeof(outfile));
+   memset(outdir, '\0', sizeof(outdir));
 
    enable_aesni = Check_CPU_support_AES();
 
@@ -328,12 +329,12 @@ int main(int argc, char *argv[])
       return 1;
 
    /* verify outdir */
+   strcpy(outdir, dirname(srffile));
    if(outdir[strlen(outdir)-1] != '/')
       strcat(outdir, "/");
 
-   strcpy(outfile, outdir);
-
    /* generate outfile name based on title from .inf file */
+   strcpy(outfile, outdir);
    if(genoutfilename(outfile, inffile) != 0)
    {
       strcat(outfile, srffile);
