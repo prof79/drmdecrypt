@@ -35,6 +35,9 @@ CFLAGS += -DHAVE_POSIX_MEMALIGN
 LDFLAGS	+= -lc
 endif
 
+# Release defines
+RELDIR	= drmdecrypt-1.0
+
 ##########################
 
 SRC	= AES.c AESNI.c drmdecrypt.c
@@ -49,6 +52,13 @@ install:	all
 	$(STRIP) drmdecrypt
 	$(INSTALL) drmdecrypt $(BINDIR)/drmdecrypt
 
+release-win:	all
+	rm -rf $(RELDIR)
+	mkdir $(RELDIR)
+	cp LICENSE README.md drmdecrypt.exe $(RELDIR)
+	$(STRIP) $(RELDIR)/*.exe
+
 clean:
-	rm -f *.o *.core drmdecrypt
+	rm -f *.o *.core drmdecrypt drmdecrypt.exe
+	rm -rf $(RELDIR)
 
