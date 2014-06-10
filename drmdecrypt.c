@@ -265,58 +265,21 @@ int decode_packet(unsigned char *data, unsigned char *outdata)
    return 1;		
 }
 
-void usage(void)
-{
-   fprintf(stderr, "Usage: drmdecrypt [-x] [-o outdir] infile.srf ...\n");
-}
-
-int main(int argc, char *argv[])
+int decryptsrf(char *srffile, char *outdir)
 {
    char mdbfile[PATH_MAX];
    char inffile[PATH_MAX];
-   char srffile[PATH_MAX];
    char outfile[PATH_MAX];
-   char outdir[PATH_MAX];
    FILE *srffp, *outfp;
-   int ch, retries;
-
-   int sync_find = 0;
+   int retries, sync_find = 0;
    unsigned long filesize = 0, foffset = 0;
    unsigned long i;
    unsigned char buf[1024];
    unsigned char outdata[1024];
 
    memset(inffile, '\0', sizeof(inffile));
+   memset(mdbfile, '\0', sizeof(mdbfile));
    memset(outfile, '\0', sizeof(outfile));
-   memset(outdir, '\0', sizeof(outdir));
-
-   enable_aesni = Check_CPU_support_AES();
-
-   while ((ch = getopt(argc, argv, "o:x")) != -1)
-   {
-      switch (ch)
-      {
-         case 'o':
-            strcpy(outdir, optarg);
-            break;
-         case 'x':
-            enable_aesni = 0;
-            break;
-         default:
-            usage();
-            exit(EXIT_FAILURE);
-      }
-   }
-
-   if(argc == optind)
-   {
-      usage();
-      exit(EXIT_FAILURE);
-   }
-
-   trace(TRC_INFO, "AES-NI CPU support %s", enable_aesni ? "enabled" : "disabled");
-
-   strcpy(srffile, argv[optind]);
 
    strcpy(inffile, srffile);
    filename(inffile, "inf");
@@ -327,11 +290,6 @@ int main(int argc, char *argv[])
    /* read drm key from .mdb file */
    if(readdrmkey(mdbfile) != 0)
       return 1;
-
-   /* verify outdir */
-   strcpy(outdir, dirname(srffile));
-   if(outdir[strlen(outdir)-1] != '/')
-      strcat(outdir, "/");
 
    /* generate outfile name based on title from .inf file */
    strcpy(outfile, outdir);
@@ -371,7 +329,8 @@ resync:
 
    while(sync_find == 0 && retries-- > 0)
    {
-      if(fread(buf, sizeof(unsigned char), sizeof(buf), srffp) != sizeof(buf)){
+      if(fread(buf, sizeof(unsigned char), sizeof(buf), srffp) != sizeof(buf))
+      {
          trace(TRC_INFO, "short read while resyncing");
          break;
       }
@@ -396,7 +355,8 @@ resync:
    {
       for(i=0; foffset+i < filesize; i+= 188)
       {
-         if(fread(buf, sizeof(unsigned char), 188, srffp) != 188){
+         if(fread(buf, sizeof(unsigned char), 188, srffp) != 188)
+         {
             trace(TRC_INFO, "short read while reading stream");
             break;
          }
@@ -418,6 +378,60 @@ resync:
 
    fclose(srffp);
    fclose(outfp);
+
+   return 0;
+}
+
+void usage(void)
+{
+   fprintf(stderr, "Usage: drmdecrypt [-x] [-o outdir] infile.srf ...\n");
+}
+
+int main(int argc, char *argv[])
+{
+   char outdir[PATH_MAX];
+   int ch;
+
+   memset(outdir, '\0', sizeof(outdir));
+
+   enable_aesni = Check_CPU_support_AES();
+
+   while ((ch = getopt(argc, argv, "o:x")) != -1)
+   {
+      switch (ch)
+      {
+         case 'o':
+            strcpy(outdir, optarg);
+            break;
+         case 'x':
+            enable_aesni = 0;
+            break;
+         default:
+            usage();
+            exit(EXIT_FAILURE);
+      }
+   }
+
+   if(argc == optind)
+   {
+      usage();
+      exit(EXIT_FAILURE);
+   }
+
+   /* set and verify outdir */
+   if(strlen(outdir) < 1)
+      strcpy(outdir, dirname(argv[optind]));
+
+   if(outdir[strlen(outdir)-1] != '/')
+      strcat(outdir, "/");
+
+   trace(TRC_INFO, "AES-NI CPU support %s", enable_aesni ? "enabled" : "disabled");
+
+   do
+   {
+      decryptsrf(argv[optind], outdir);
+   }
+   while(++optind < argc);
 
    return 0;
 }

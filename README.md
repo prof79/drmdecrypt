@@ -14,6 +14,7 @@ This version is fast, POSIX compliant (Linux, FreeBSD, Windows
 
 ## Features
 - Reading title and channel from .inf file
+- Bulk decoding multiple files
 - AES-NI support (5x faster)
 
 
