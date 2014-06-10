@@ -31,12 +31,12 @@ endif
 ifeq ($(OS),Windows_NT)
 CFLAGS += -DHAVE__ALIGNED_MALLOC
 LDFLAGS	+= -lmsvcrt
-RELDIR	= drmdecrypt-$(VERSION)-win
 else
 CFLAGS += -DHAVE_POSIX_MEMALIGN
 LDFLAGS	+= -lc
-RELDIR	= drmdecrypt-$(VERSION)
 endif
+
+RELDIR	= drmdecrypt-$(VERSION)
 
 ##########################
 
@@ -48,15 +48,30 @@ all:	drmdecrypt
 drmdecrypt:	$(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $(OBJS)
 
+drmdecrypt-static:	$(OBJS)
+	$(CC) $(LDFLAGS) -static -o $@ $(OBJS)
+
 install:	all
 	$(STRIP) drmdecrypt
 	$(INSTALL) drmdecrypt $(BINDIR)/drmdecrypt
 
 release-win:	all
-	rm -rf $(RELDIR)
-	mkdir $(RELDIR)
-	cp LICENSE README.md drmdecrypt.exe $(RELDIR)
-	$(STRIP) $(RELDIR)/*.exe
+	rm -rf $(RELDIR)-win
+	mkdir $(RELDIR)-win
+	cp LICENSE README.md drmdecrypt.exe $(RELDIR)-win
+	$(STRIP) $(RELDIR)-win/*.exe
+
+release-x64:	drmdecrypt drmdecrypt-static
+	rm -rf $(RELDIR)-x64
+	mkdir $(RELDIR)-x64
+	cp LICENSE README.md drmdecrypt drmdecrypt-static $(RELDIR)-x64
+	tar cvfj $(RELDIR)-x64.tar.bz2 $(RELDIR)-x64
+
+release-src:
+	rm -rf $(RELDIR)-src
+	mkdir $(RELDIR)-src
+	cp LICENSE README.md *.c *.h Makefile $(RELDIR)-src
+	tar cvfj $(RELDIR)-src.tar.bz2 $(RELDIR)-src
 
 clean:
 	rm -f *.o *.core drmdecrypt drmdecrypt.exe
