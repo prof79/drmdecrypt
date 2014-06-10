@@ -26,7 +26,7 @@
 #ifndef REVISION
 #define REVISION  ""
 #endif
-#define VERSION	  "0.9-git" STR(REVISION)
+#define VERSION	  "0.9-git"
 
 block_state state;
 int enable_aesni = 0;
@@ -413,7 +413,7 @@ int main(int argc, char *argv[])
             strcpy(outdir, optarg);
             break;
          case 'v':
-            fprintf(stderr, "drmdecrypt %s\n\n", VERSION);
+            fprintf(stderr, "drmdecrypt %s (%s)\n\n", VERSION, STR(REVISION));
             fprintf(stderr, "Source: http://github.com/decke/drmdecrypt\n");
             fprintf(stderr, "License: GNU General Public License\n");
             exit(EXIT_SUCCESS);

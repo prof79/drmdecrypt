@@ -10,6 +10,13 @@ STRIP	= strip
 PREFIX	= /usr/local
 BINDIR	= $(PREFIX)/bin
 
+# add git revision if .git exists
+ifeq (,$(wildcard .git))
+CFLAGS	+= -DREVISION="unknown"
+else
+CFLAGS	+= -DREVISION="$(shell git rev-parse --short HEAD)"
+endif
+
 ifeq ($(DEBUG),1)
 # for debugging
 CFLAGS	+= -g -Wall -Werror
