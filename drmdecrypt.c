@@ -26,7 +26,7 @@
 #ifndef REVISION
 #define REVISION  ""
 #endif
-#define VERSION	  "0.9-git"
+#define VERSION	  "1.0-git"
 
 block_state state;
 int enable_aesni = 0;
