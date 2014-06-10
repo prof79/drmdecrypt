@@ -24,16 +24,10 @@ drmdecrypt [-x] [-o outdir] infile.srf
 ```
 
 
-## Building
+## Building / Installing
 
 ```
 make
-```
-
-
-## Installing
-
-```
 make install
 ```
 
