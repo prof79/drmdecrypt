@@ -14,7 +14,7 @@ enum {
    TRC_ERROR
 };
 
-static int tracelevel = TRC_INFO;
+static int tracelevel = TRC_WARN;
 
 #define trace(L, M, ...) \
    if(L >= tracelevel) { \

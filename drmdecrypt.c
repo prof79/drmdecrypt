@@ -393,7 +393,14 @@ resync:
 
 void usage(void)
 {
-   fprintf(stderr, "Usage: drmdecrypt [-x] [-o outdir] infile.srf ...\n");
+   fprintf(stderr, "Usage: drmdecrypt [-dqvx][-o outdir] infile.srf ...\n");
+   fprintf(stderr, "Options:\n");
+   fprintf(stderr, "   -d         Show debugging output\n");
+   fprintf(stderr, "   -o outdir  Output directory\n");
+   fprintf(stderr, "   -q         Be quiet. Only error output.\n");
+   fprintf(stderr, "   -v         Version information\n");
+   fprintf(stderr, "   -x         Disable AES-NI support\n");
+   fprintf(stderr, "\n");
 }
 
 int main(int argc, char *argv[])
@@ -405,12 +412,20 @@ int main(int argc, char *argv[])
 
    enable_aesni = Check_CPU_support_AES();
 
-   while ((ch = getopt(argc, argv, "o:vx")) != -1)
+   while ((ch = getopt(argc, argv, "do:qvx")) != -1)
    {
       switch (ch)
       {
+         case 'd':
+            if(tracelevel > TRC_DEBUG)
+               tracelevel--;
+            break;
          case 'o':
             strcpy(outdir, optarg);
+            break;
+         case 'q':
+            if(tracelevel < TRC_ERROR)
+               tracelevel++;
             break;
          case 'v':
             fprintf(stderr, "drmdecrypt %s (%s)\n\n", VERSION, STR(REVISION));

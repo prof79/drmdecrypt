@@ -21,7 +21,13 @@ This version is fast, POSIX compliant (Linux, FreeBSD, Windows
 ## Usage
 
 ```
-drmdecrypt [-x] [-o outdir] infile.srf
+Usage: drmdecrypt [-dqvx][-o outdir] infile.srf ...
+Options:
+   -d         Show debugging output
+   -o outdir  Output directory
+   -q         Be quiet. Only error output.
+   -v         Version information
+   -x         Disable AES-NI support
 ```
 
 
@@ -35,6 +41,5 @@ make install
 
 ## TODO
 
-- flag to specify verbosity level
-- MPEG packet size could also be 204 or 208 byte
+- Test with Samsung Series D, E, F
 
