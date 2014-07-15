@@ -227,7 +227,6 @@ int decrypt_aes128cbc(unsigned char *pin, int len, unsigned char *pout)
 int decode_packet(unsigned char *data, unsigned char *outdata)
 {
    int offset;
-   int scrambling, adaptation;
 
    if(data[0] != 0x47)
    {
@@ -236,33 +235,23 @@ int decode_packet(unsigned char *data, unsigned char *outdata)
    }
 
    memcpy(outdata, data, 188);
+   
+   trace(TRC_DEBUG, "-------------------");
+   trace(TRC_DEBUG, "Trans. Error Indicator: 0x%x", data[2] & 0x80);
+   trace(TRC_DEBUG, "Payload Unit start Ind: 0x%x", data[2] & 0x40);
+   trace(TRC_DEBUG, "Transport Priority    : 0x%x", data[2] & 0x20);
+   trace(TRC_DEBUG, "Scrambling control    : 0x%x", data[3] & 0xC0);
+   trace(TRC_DEBUG, "Adaptation field exist: 0x%x", data[3] & 0x20);
+   trace(TRC_DEBUG, "Contains payload      : 0x%x", data[3] & 0x10);
+   trace(TRC_DEBUG, "Continuity counter    : 0x%x", data[3] & 0x0f);
 
-   scrambling = data[3] & 0xC0;
-   adaptation = data[3] & 0x20;
-
-   if(scrambling == 0x80)
-   {
-      trace(TRC_DEBUG, "packet scrambled with even key");
-   }
-   else if(scrambling == 0xC0)
-   {
-      trace(TRC_DEBUG, "packet scrambled with odd key");
-   }
-   else if(scrambling == 0x00)
-   {
-      trace(TRC_DEBUG, "packet not scrambled");
-      return 0;
-   }
-   else
-   {
-      trace(TRC_ERROR, "scrambling info seems to be invalid!");
-      return 0;
-   }
+   if((data[3] & 0x20) == 0x01)
+	   trace(TRC_DEBUG, "Adaptation Field length: 0x%x", data[4]+1);
 
    offset=4;
 
    /* skip adaption field */
-   if(adaptation)
+   if((data[3] & 0x20) == 0x01)
       offset += (data[4]+1);
 
    /* remove scrambling bits */
@@ -271,7 +260,7 @@ int decode_packet(unsigned char *data, unsigned char *outdata)
    /* decrypt only full blocks (they seem to avoid padding) */
    decrypt_aes128cbc(data + offset, ((188 - offset)/BLOCK_SIZE)*BLOCK_SIZE, outdata + offset);
 
-   return 1;		
+   return 1;
 }
 
 int decryptsrf(char *srffile, char *outdir)
