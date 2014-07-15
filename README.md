@@ -38,8 +38,10 @@ make
 make install
 ```
 
+## Tested with
+- Samsung Series C, D
 
 ## TODO
 
-- Test with Samsung Series D, E, F
+- Test with Samsung Series E, F
 
